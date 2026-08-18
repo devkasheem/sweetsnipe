@@ -1,0 +1,1251 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Sweetsnipe</title>
+    <link rel="icon" href="/static/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="logo-wrap">
+          <div class="logo">SWEETSNIPE</div>
+        </div>
+        <div class="nav-links">
+          <a href="#" onclick="showSection('jobs')">Jobs</a>
+          <a href="#" onclick="showSection('wallets')">Wallet Library</a>
+          <a href="#" onclick="logout()">Logout</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="dashboard-shell">
+      <header class="dashboard-header glass-panel">
+        <div class="page-intro">
+          <h1>Mint command center</h1>
+        </div>
+        <div class="header-actions">
+          <button onclick="startWizard()" class="btn btn-primary">
+            + Create New Mint Job
+          </button>
+          <button onclick="openBulkImport()" class="btn btn-secondary">
+            📥 Bulk Import Wallets
+          </button>
+          <button onclick="openAddCredits()" class="btn btn-secondary">
+            💳 Add Credits
+          </button>
+        </div>
+      </header>
+
+      <div class="stats-grid">
+        <div class="stat-card glass-panel">
+          <div class="stat-label">Available Credits</div>
+          <div class="stat-value" id="credits">0</div>
+        </div>
+        <div class="stat-card glass-panel">
+          <div class="stat-label">Total Jobs</div>
+          <div class="stat-value" id="total-jobs">0</div>
+        </div>
+        <div class="stat-card glass-panel">
+          <div class="stat-label">Successful Mints</div>
+          <div class="stat-value" id="successful-mints">0</div>
+        </div>
+      </div>
+
+      <main class="dashboard-content">
+        <section id="section-jobs" class="dashboard-section glass-panel">
+          <div class="section-toolbar">
+            <div>
+              <span class="mini-label">Job stream</span>
+              <h3>Job History</h3>
+            </div>
+            <div class="toolbar-filters">
+              <select
+                class="form-input compact"
+                id="filter-status"
+                onchange="applyFilters()"
+              >
+                <option value="">All Status</option>
+                <option value="queued">Queued</option>
+                <option value="running">Running</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+              </select>
+              <select
+                class="form-input compact"
+                id="filter-network"
+                onchange="applyFilters()"
+              >
+                <option value="">All Networks</option>
+                <option value="ETH">Ethereum</option>
+                <option value="BASE">Base</option>
+                <option value="OP">Optimism</option>
+                <option value="ARB">Arbitrum</option>
+                <option value="POLY">Polygon</option>
+                <option value="BSC">BNB Chain</option>
+                <option value="AVAX">Avalanche</option>
+                <option value="BERA">Berachain</option>
+              </select>
+              <input
+                type="text"
+                class="form-input compact search-input"
+                id="filter-search"
+                placeholder="Search contract..."
+                oninput="applyFilters()"
+              />
+            </div>
+          </div>
+          <div id="jobs-list"></div>
+        </section>
+
+        <section
+          id="section-wallets"
+          class="dashboard-section glass-panel"
+          style="display: none"
+        >
+          <div class="section-toolbar">
+            <div>
+              <span class="mini-label">Vault</span>
+              <h3>Wallet Library</h3>
+            </div>
+            <button onclick="openBulkImport()" class="btn btn-secondary btn-sm">
+              + Bulk Import
+            </button>
+          </div>
+          <p class="section-copy">
+            Save burner wallet keys here to reuse them across multiple mint
+            jobs. Keys are encrypted and never exposed.
+          </p>
+          <div id="wallets-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <div id="wizard" class="wizard hidden">
+      <div class="glass" style="padding: 2rem; position: relative">
+        <button
+          onclick="closeWizard()"
+          style="
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+          "
+        >
+          ×
+        </button>
+        <div class="step-indicator">
+          <div class="step-dot active" id="dot-1"></div>
+          <div class="step-dot" id="dot-2"></div>
+          <div class="step-dot" id="dot-3"></div>
+          <div class="step-dot" id="dot-4"></div>
+        </div>
+
+        <div class="step active" id="step-1">
+          <h3
+            style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem"
+          >
+            Basic Information
+          </h3>
+          <div class="form-group">
+            <label class="form-label">NFT Contract Address</label>
+            <input
+              type="text"
+              class="form-input"
+              id="nft-contract"
+              placeholder="0x..."
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Network</label>
+            <select
+              class="form-input"
+              id="network"
+              onchange="updateNetworkInfo()"
+            >
+              <option value="ETH">Ethereum (ETH)</option>
+              <option value="BASE">Base (ETH)</option>
+              <option value="OP">Optimism (ETH)</option>
+              <option value="ARB">Arbitrum (ETH)</option>
+              <option value="POLY">Polygon (POL)</option>
+              <option value="BSC">BNB Chain (BNB)</option>
+              <option value="AVAX">Avalanche (AVAX)</option>
+              <option value="BERA">Berachain (BERA)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mint Quantity Per Wallet</label>
+            <input
+              type="number"
+              class="form-input"
+              id="mint-quantity"
+              value="1"
+              min="1"
+              max="10"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Minting Mode</label>
+            <select
+              class="form-input"
+              id="mint-mode"
+              onchange="toggleMintFuncName()"
+            >
+              <option value="DIRECT">Direct (Call Contract)</option>
+              <option value="PROXY">Proxy (via MultiMint)</option>
+            </select>
+          </div>
+          <div class="form-group" id="mint-func-group">
+            <label class="form-label">Mint Function Name</label>
+            <input
+              type="text"
+              class="form-input"
+              id="mint-func"
+              value="mint"
+              placeholder="e.g., mint, publicMint, claim"
+            />
+            <p
+              style="
+                color: var(--text-muted);
+                font-size: 0.8rem;
+                margin-top: 0.5rem;
+              "
+            >
+              Check Etherscan Write Contract tab for the exact function name.
+            </p>
+          </div>
+          <div style="display: flex; justify-content: flex-end">
+            <button onclick="nextStep(2)" class="btn btn-primary">
+              Next →
+            </button>
+          </div>
+        </div>
+
+        <div class="step" id="step-2">
+          <h3
+            style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem"
+          >
+            Advanced Options
+          </h3>
+          <div class="form-group">
+            <div class="toggle" onclick="toggleSwitch(this)">
+              <div class="toggle-switch"></div>
+              <div>
+                <div style="font-weight: 500">God Mode (Pre-Signed TX)</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted)">
+                  Sign transactions 5 seconds before minting opens for instant
+                  broadcast.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="toggle" onclick="toggleSwitch(this)">
+              <div class="toggle-switch"></div>
+              <div>
+                <div style="font-weight: 500">Auto-Transfer to Cold Wallet</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted)">
+                  Automatically send minted NFTs to your main wallet.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="toggle" onclick="toggleSwitch(this)">
+              <div class="toggle-switch"></div>
+              <div>
+                <div style="font-weight: 500">ETH Sweeper</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted)">
+                  Withdraw leftover ETH from worker wallets back to your cold
+                  wallet.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label"
+              >Cold Wallet Address (for transfers)</label
+            >
+            <input
+              type="text"
+              class="form-input"
+              id="recipient"
+              placeholder="0xYourMainWalletAddress"
+            />
+          </div>
+          <div style="display: flex; justify-content: space-between">
+            <button onclick="prevStep(1)" class="btn btn-secondary">
+              ← Back
+            </button>
+            <button onclick="nextStep(3)" class="btn btn-primary">
+              Next →
+            </button>
+          </div>
+        </div>
+
+        <div class="step" id="step-3">
+          <h3
+            style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem"
+          >
+            Worker Wallets
+          </h3>
+          <p style="color: var(--text-secondary); margin-bottom: 1rem">
+            Choose wallets from your library or add new ones.
+          </p>
+          <div
+            style="
+              display: flex;
+              gap: 0.5rem;
+              margin-bottom: 1rem;
+              flex-wrap: wrap;
+            "
+          >
+            <button
+              onclick="setWorkerMode('new')"
+              class="btn btn-secondary btn-sm"
+              id="mode-new"
+            >
+              + New Wallets
+            </button>
+            <button
+              onclick="setWorkerMode('saved')"
+              class="btn btn-secondary btn-sm"
+              id="mode-saved"
+            >
+              📚 From Library
+            </button>
+          </div>
+          <div id="workers-new">
+            <div id="workers-list"></div>
+            <button
+              onclick="addWorkerField()"
+              class="btn btn-secondary btn-sm"
+              style="margin-bottom: 1rem"
+            >
+              + Add Another Wallet
+            </button>
+          </div>
+          <div id="workers-saved" style="display: none">
+            <div id="saved-wallets-list"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between">
+            <button onclick="prevStep(2)" class="btn btn-secondary">
+              ← Back
+            </button>
+            <button onclick="nextStep(4)" class="btn btn-primary">
+              Next →
+            </button>
+          </div>
+        </div>
+
+        <div class="step" id="step-4">
+          <h3
+            style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem"
+          >
+            Review & Pay
+          </h3>
+          <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.75rem;
+              "
+            >
+              <span style="color: var(--text-secondary)">Wallets</span>
+              <span id="review-wallets" style="font-weight: 600">0</span>
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.75rem;
+              "
+            >
+              <span style="color: var(--text-secondary)">Price per wallet</span>
+              <span style="font-weight: 600">$1.00</span>
+            </div>
+            <div
+              style="
+                border-top: 1px solid var(--border);
+                padding-top: 0.75rem;
+                display: flex;
+                justify-content: space-between;
+              "
+            >
+              <span style="font-weight: 600">Total</span>
+              <span
+                id="review-total"
+                style="font-weight: 700; font-size: 1.25rem"
+                >$0.00</span
+              >
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Your Credit Balance</label>
+            <div
+              id="credit-balance"
+              style="font-size: 1.5rem; font-weight: 700"
+            >
+              $0.00
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between">
+            <button onclick="prevStep(3)" class="btn btn-secondary">
+              ← Back
+            </button>
+            <button onclick="submitJob()" class="btn btn-primary">
+              Launch Mint Job 🚀
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 3rem">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem">
+          Job History
+        </h3>
+        <div id="jobs-list"></div>
+      </div>
+    </div>
+
+    <div
+      id="bulk-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(8px);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        class="glass"
+        style="padding: 2rem; width: 100%; max-width: 600px; margin: 1rem"
+      >
+        <div style="text-align: center; margin-bottom: 2rem">
+          <h2 style="font-size: 1.5rem; font-weight: 700">
+            Bulk Import Wallets
+          </h2>
+          <p
+            style="
+              color: var(--text-secondary);
+              font-size: 0.9rem;
+              margin-top: 0.5rem;
+            "
+          >
+            Paste multiple private keys, one per line
+          </p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Private Keys (one per line)</label>
+          <textarea
+            class="form-input"
+            id="bulk-keys"
+            rows="10"
+            placeholder="0xabc...&#10;0xdef...&#10;0xghi..."
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Proxy URL (optional, applied to all)</label>
+          <input
+            type="text"
+            class="form-input"
+            id="bulk-proxy"
+            placeholder="http://user:pass@ip:port"
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Label (optional)</label>
+          <input
+            type="text"
+            class="form-input"
+            id="bulk-label"
+            placeholder="Robinhood ETH wallet"
+          />
+        </div>
+        <div style="display: flex; gap: 1rem; justify-content: center">
+          <button onclick="closeBulkImport()" class="btn btn-secondary">
+            Cancel
+          </button>
+          <button onclick="submitBulkImport()" class="btn btn-primary">
+            Import Wallets
+          </button>
+        </div>
+        <button
+          onclick="closeBulkImport()"
+          style="
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+          "
+        >
+          ×
+        </button>
+      </div>
+    </div>
+
+    <div
+      id="credits-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(8px);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        class="glass"
+        style="padding: 2rem; width: 100%; max-width: 500px; margin: 1rem"
+      >
+        <div style="text-align: center; margin-bottom: 2rem">
+          <h2 style="font-size: 1.5rem; font-weight: 700">💳 Add Credits</h2>
+          <p
+            style="
+              color: var(--text-secondary);
+              font-size: 0.9rem;
+              margin-top: 0.5rem;
+            "
+          >
+            Pay $1 per wallet. Credits are added automatically after on-chain
+            verification.
+          </p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Treasury Address</label>
+          <div style="display: flex; gap: 0.5rem; align-items: stretch">
+            <div
+              class="form-input"
+              style="
+                background: var(--bg-secondary);
+                font-family: monospace;
+                font-size: 0.8rem;
+                word-break: break-all;
+                flex: 1;
+                cursor: pointer;
+                user-select: all;
+              "
+              id="modal-treasury-address"
+              title="Click to select"
+            >
+              Loading...
+            </div>
+            <button
+              type="button"
+              onclick="copyTreasury()"
+              class="btn btn-secondary"
+              style="flex: 0 0 auto; padding: 0.9rem 1rem; font-size: 0.85rem"
+              id="copy-treasury-btn"
+            >
+              Copy
+            </button>
+          </div>
+          <p
+            style="
+              color: var(--text-muted);
+              font-size: 0.75rem;
+              margin-top: 0.4rem;
+            "
+          >
+            Send payment to the address above, then paste the transaction hash
+            below.
+          </p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Network</label>
+          <select
+            class="form-input"
+            id="modal-payment-network"
+            style="width: auto"
+          >
+            <option value="ETH">Ethereum (ETH)</option>
+            <option value="BASE">Base (ETH)</option>
+            <option value="OP">Optimism (ETH)</option>
+            <option value="ARB">Arbitrum (ETH)</option>
+            <option value="POLY">Polygon (POL)</option>
+            <option value="BSC">BNB Chain (BNB)</option>
+            <option value="AVAX">Avalanche (AVAX)</option>
+            <option value="BERA">Berachain (BERA)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount (USD)</label>
+          <input
+            type="number"
+            class="form-input"
+            id="modal-payment-amount"
+            value="1.0"
+            step="0.1"
+            min="1.0"
+            style="width: 150px"
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <select
+            class="form-input"
+            id="modal-payment-currency"
+            style="width: auto"
+          >
+            <option value="USDT" selected>USDT</option>
+            <option value="ETH">ETH</option>
+            <option value="USDC">USDC</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Transaction Hash</label>
+          <input
+            type="text"
+            class="form-input"
+            id="modal-payment-tx"
+            placeholder="0x..."
+          />
+        </div>
+        <div style="display: flex; gap: 1rem; justify-content: center">
+          <button onclick="closeAddCredits()" class="btn btn-secondary">
+            Cancel
+          </button>
+          <button
+            onclick="submitPaymentFromModal()"
+            class="btn btn-primary"
+            id="modal-payment-btn"
+          >
+            Submit Payment
+          </button>
+        </div>
+        <p
+          id="modal-payment-status"
+          style="margin-top: 0.75rem; font-size: 0.85rem; text-align: center"
+        ></p>
+        <button
+          onclick="closeAddCredits()"
+          style="
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+          "
+        >
+          ×
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let currentStep = 1;
+      let wizardData = {
+        presign: false,
+        autoTransfer: false,
+        autoSweep: false,
+        workers: [],
+        workerMode: "new",
+      };
+      let allWallets = [];
+      let selectedSavedWallets = new Set();
+
+      function showSection(section) {
+        document.getElementById("section-jobs").style.display =
+          section === "jobs" ? "block" : "none";
+        document.getElementById("section-wallets").style.display =
+          section === "wallets" ? "block" : "none";
+        if (section === "wallets") loadWallets();
+        if (section === "jobs") loadJobs();
+      }
+
+      function toggleSwitch(el) {
+        el.classList.toggle("active");
+        const isActive = el.classList.contains("active");
+        if (el.textContent.includes("God Mode")) wizardData.presign = isActive;
+        if (el.textContent.includes("Auto-Transfer"))
+          wizardData.autoTransfer = isActive;
+        if (el.textContent.includes("ETH Sweeper"))
+          wizardData.autoSweep = isActive;
+      }
+
+      function toggleMintFuncName() {
+        const mode = document.getElementById("mint-mode").value;
+        document.getElementById("mint-func-group").style.display =
+          mode === "DIRECT" ? "block" : "none";
+      }
+
+      function setWorkerMode(mode) {
+        wizardData.workerMode = mode;
+        document.getElementById("mode-new").className =
+          mode === "new"
+            ? "btn btn-primary btn-sm"
+            : "btn btn-secondary btn-sm";
+        document.getElementById("mode-saved").className =
+          mode === "saved"
+            ? "btn btn-primary btn-sm"
+            : "btn btn-secondary btn-sm";
+        document.getElementById("workers-new").style.display =
+          mode === "new" ? "block" : "none";
+        document.getElementById("workers-saved").style.display =
+          mode === "saved" ? "block" : "none";
+        if (mode === "saved") loadSavedWallets();
+      }
+
+      function addWorkerField() {
+        const list = document.getElementById("workers-list");
+        const idx = list.children.length;
+        const div = document.createElement("div");
+        div.className = "form-group";
+        div.style.background = "var(--bg-input)";
+        div.style.padding = "1rem";
+        div.style.borderRadius = "10px";
+        div.style.border = "1px solid var(--border)";
+        div.innerHTML = `<label class="form-label">Wallet #${idx + 1} Private Key</label><input type="text" class="form-input worker-pk" placeholder="0x..." required>`;
+        list.appendChild(div);
+      }
+
+      function showStep(step) {
+        document
+          .querySelectorAll(".step")
+          .forEach((s) => s.classList.remove("active"));
+        document.getElementById(`step-${step}`).classList.add("active");
+        document.querySelectorAll(".step-dot").forEach((dot, idx) => {
+          dot.classList.remove("active", "completed");
+          if (idx + 1 < step) dot.classList.add("completed");
+          if (idx + 1 === step) dot.classList.add("active");
+        });
+        currentStep = step;
+      }
+
+      function nextStep(step) {
+        if (step === 4) {
+          updateReview();
+        }
+        showStep(step);
+      }
+
+      function prevStep(step) {
+        showStep(step);
+      }
+
+      function updateReview() {
+        let count =
+          wizardData.workerMode === "new"
+            ? document.querySelectorAll(".worker-pk").length
+            : selectedSavedWallets.size;
+        document.getElementById("review-wallets").textContent = count;
+        document.getElementById("review-total").textContent =
+          `$${(count * 1.0).toFixed(2)}`;
+      }
+
+      function startWizard() {
+        document.getElementById("wizard").classList.remove("hidden");
+        document.getElementById("workers-list").innerHTML = "";
+        addWorkerField();
+        setWorkerMode("new");
+        showStep(1);
+      }
+
+      function closeWizard() {
+        document.getElementById("wizard").classList.add("hidden");
+      }
+
+      async function loadSavedWallets() {
+        const token = localStorage.getItem("access_token");
+        try {
+          const response = await fetch("/api/wallets", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            allWallets = await response.json();
+            renderSavedWallets();
+          }
+        } catch (e) {
+          console.error("Failed to load wallets:", e);
+        }
+      }
+
+      function renderSavedWallets() {
+        const container = document.getElementById("saved-wallets-list");
+        if (allWallets.length === 0) {
+          container.innerHTML =
+            '<div class="glass" style="padding: 1.5rem; text-align: center; color: var(--text-muted);">No saved wallets yet. Use Bulk Import to add some!</div>';
+          return;
+        }
+        container.innerHTML = allWallets
+          .map(
+            (w) => `
+                <div class="card glass-hover" style="margin-bottom: 0.75rem; cursor: pointer; ${selectedSavedWallets.has(w.id) ? "border-color: var(--text-primary);" : ""}" onclick="toggleWalletSelection('${w.id}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.9rem;">${w.label || "Wallet"}</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; font-family: monospace;">${w.address.slice(0, 10)}...${w.address.slice(-8)}</div>
+                        </div>
+                        <span class="badge ${selectedSavedWallets.has(w.id) ? "badge-success" : "badge-pending"}">${selectedSavedWallets.has(w.id) ? "Selected" : "Click to select"}</span>
+                    </div>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      function toggleWalletSelection(walletId) {
+        if (selectedSavedWallets.has(walletId))
+          selectedSavedWallets.delete(walletId);
+        else selectedSavedWallets.add(walletId);
+        renderSavedWallets();
+      }
+
+      async function submitJob() {
+        let workers =
+          wizardData.workerMode === "new"
+            ? Array.from(document.querySelectorAll(".worker-pk"))
+                .map((w) => ({
+                  private_key: w.value.trim(),
+                  proxy_url: null,
+                  wallet_id: null,
+                }))
+                .filter((w) => w.private_key)
+            : Array.from(selectedSavedWallets).map((id) => ({
+                private_key: null,
+                proxy_url: null,
+                wallet_id: id,
+              }));
+        if (workers.length === 0) {
+          alert("Please add at least one wallet");
+          return;
+        }
+
+        const job = {
+          nft_contract: document.getElementById("nft-contract").value,
+          network: document.getElementById("network").value,
+          mint_quantity: parseInt(
+            document.getElementById("mint-quantity").value,
+          ),
+          mint_mode: document.getElementById("mint-mode").value,
+          mint_func_name: document.getElementById("mint-func").value,
+          recipient_address: document.getElementById("recipient").value || null,
+          presign_enabled: wizardData.presign,
+          auto_transfer_enabled: wizardData.autoTransfer,
+          auto_sweep_enabled: wizardData.autoSweep,
+          workers: workers,
+          max_threads: 5,
+        };
+
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = "Creating Job...";
+        try {
+          const token = localStorage.getItem("access_token");
+          const response = await fetch("/api/jobs", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(job),
+          });
+          if (response.ok) {
+            document.getElementById("wizard").classList.add("hidden");
+            selectedSavedWallets.clear();
+            loadJobs();
+            alert("Job created successfully!");
+          } else {
+            const error = await response.json();
+            alert(error.detail || "Failed to create job");
+          }
+        } catch (error) {
+          alert("Connection error. Please try again.");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Launch Mint Job 🚀";
+        }
+      }
+
+      async function loadJobs() {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+        try {
+          const status = document.getElementById("filter-status")?.value;
+          const network = document.getElementById("filter-network")?.value;
+          const search = document.getElementById("filter-search")?.value;
+          let url = "/api/jobs";
+          const params = new URLSearchParams();
+          if (status) params.append("status", status);
+          if (network) params.append("network", network);
+          if (search) params.append("search", search);
+          if (params.toString()) url += "?" + params.toString();
+          const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const jobs = await response.json();
+            renderJobs(jobs);
+          }
+        } catch (e) {
+          console.error("Failed to load jobs:", e);
+        }
+      }
+
+      function applyFilters() {
+        loadJobs();
+      }
+
+      function renderJobs(jobs) {
+        const container = document.getElementById("jobs-list");
+        if (jobs.length === 0) {
+          container.innerHTML =
+            '<div class="glass" style="padding: 2rem; text-align: center; color: var(--text-muted);">No jobs yet. Create your first mint job above!</div>';
+          return;
+        }
+        container.innerHTML = jobs
+          .map(
+            (job) => `
+                <div class="card glass-hover" style="margin-bottom: 1rem; cursor: pointer;" onclick="showJobDetail('${job.id}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem;">${job.network} • ${job.mint_quantity} NFT</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; font-family: monospace;">${job.nft_contract.slice(0, 10)}...${job.nft_contract.slice(-8)}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="badge badge-${job.status === "completed" ? "success" : job.status === "running" ? "running" : job.status === "failed" ? "failed" : "pending"}">${job.status}</span>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">${new Date(job.created_at).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 2rem; margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+                        <div>Wallets: ${job.total_wallets}</div>
+                        <div>Success: <span style="color: var(--success);">${job.successful_mints}</span></div>
+                        <div>Failed: <span style="color: var(--error);">${job.failed_mints}</span></div>
+                        <div>Cost: $${job.cost.toFixed(2)}</div>
+                    </div>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      async function showJobDetail(jobId) {
+        const token = localStorage.getItem("access_token");
+        try {
+          const response = await fetch(`/api/jobs/${jobId}/workers`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const workers = await response.json();
+            alert(
+              `Workers:\n${workers.map((w) => `#${w.id.slice(0, 8)}: ${w.status} - ${w.tx_hash || "pending"}`).join("\n")}`,
+            );
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      function openBulkImport() {
+        document.getElementById("bulk-modal").style.display = "flex";
+      }
+      function closeBulkImport() {
+        document.getElementById("bulk-modal").style.display = "none";
+      }
+
+      async function submitBulkImport() {
+        const keysText = document.getElementById("bulk-keys").value;
+        const proxy = document.getElementById("bulk-proxy").value || null;
+        const label = document.getElementById("bulk-label").value || null;
+        const keys = keysText
+          .split("\n")
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0);
+        if (keys.length === 0) {
+          alert("Please enter at least one private key");
+          return;
+        }
+        const workers = keys.map((key) => ({
+          private_key: key,
+          proxy_url: proxy,
+          label: label,
+        }));
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = "Importing...";
+        try {
+          const token = localStorage.getItem("access_token");
+          const response = await fetch("/api/wallets/bulk", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(workers),
+          });
+          if (response.ok) {
+            const result = await response.json();
+            alert(`Successfully imported ${result.length} wallets!`);
+            closeBulkImport();
+            document.getElementById("bulk-keys").value = "";
+            document.getElementById("bulk-proxy").value = "";
+            document.getElementById("bulk-label").value = "";
+            loadWallets();
+          } else {
+            const error = await response.json();
+            alert(error.detail || "Failed to import wallets");
+          }
+        } catch (error) {
+          alert("Connection error. Please try again.");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Import Wallets";
+        }
+      }
+
+      async function loadWallets() {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+        try {
+          const response = await fetch("/api/wallets", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const wallets = await response.json();
+            renderWallets(wallets);
+          }
+        } catch (e) {
+          console.error("Failed to load wallets:", e);
+        }
+      }
+
+      function renderWallets(wallets) {
+        const container = document.getElementById("wallets-list");
+        if (wallets.length === 0) {
+          container.innerHTML =
+            '<div class="glass" style="padding: 2rem; text-align: center; color: var(--text-muted);">No saved wallets yet. Use Bulk Import to add some!</div>';
+          return;
+        }
+        container.innerHTML = wallets
+          .map(
+            (w) => `
+                <div class="card glass-hover" style="margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.9rem;">${w.label || "Unnamed Wallet"}</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; font-family: monospace;">${w.address.slice(0, 10)}...${w.address.slice(-8)}</div>
+                            ${w.proxy_url ? `<div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Proxy: ${w.proxy_url.slice(0, 30)}...</div>` : ""}
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">${new Date(w.created_at).toLocaleDateString()}</div>
+                            <button onclick="deleteWallet('${w.id}')" class="btn btn-secondary btn-sm" style="color: var(--error); border-color: var(--error);">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      async function deleteWallet(walletId) {
+        if (!confirm("Are you sure you want to delete this wallet?")) return;
+        const token = localStorage.getItem("access_token");
+        try {
+          const response = await fetch(`/api/wallets/${walletId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) loadWallets();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("access_token");
+        window.location.href = "/";
+      }
+
+      function openAddCredits() {
+        document.getElementById("credits-modal").style.display = "flex";
+        loadTreasuryAddress();
+      }
+      function closeAddCredits() {
+        document.getElementById("credits-modal").style.display = "none";
+      }
+
+      async function loadTreasuryAddress() {
+        const addr = "{{treasury_address}}";
+        const modalEl = document.getElementById("modal-treasury-address");
+        if (modalEl && addr) {
+          modalEl.textContent = addr;
+        }
+      }
+
+      async function copyTreasury() {
+        const addr = "{{treasury_address}}";
+        const btn = document.getElementById("copy-treasury-btn");
+        if (!addr) return;
+
+        try {
+          await navigator.clipboard.writeText(addr);
+          if (btn) {
+            const originalText = btn.textContent;
+            btn.textContent = "Copied!";
+            btn.classList.add("copied");
+            setTimeout(() => {
+              btn.textContent = originalText;
+              btn.classList.remove("copied");
+            }, 1500);
+          }
+        } catch (e) {
+          const modalEl = document.getElementById("modal-treasury-address");
+          if (modalEl) {
+            const range = document.createRange();
+            range.selectNode(modalEl);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+        }
+      }
+
+      async function submitPaymentFromModal() {
+        const txHash = document.getElementById("modal-payment-tx").value.trim();
+        const amount = parseFloat(
+          document.getElementById("modal-payment-amount").value,
+        );
+        const currency = document.getElementById(
+          "modal-payment-currency",
+        ).value;
+        const network = document.getElementById("modal-payment-network").value;
+        const btn = document.getElementById("modal-payment-btn");
+        const statusEl = document.getElementById("modal-payment-status");
+        if (!txHash) {
+          alert("Please enter transaction hash");
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "Verifying...";
+        statusEl.textContent = "Checking transaction on-chain...";
+        statusEl.style.color = "var(--text-secondary)";
+        try {
+          const token = localStorage.getItem("access_token");
+          const response = await fetch("/api/payments", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              tx_hash: txHash,
+              amount,
+              currency,
+              network,
+            }),
+          });
+          if (response.ok) {
+            const data = await response.json();
+            statusEl.textContent = `Payment submitted! Status: ${data.status}. Verifying automatically...`;
+            statusEl.style.color = "var(--warning)";
+            document.getElementById("modal-payment-tx").value = "";
+            loadStats();
+          } else {
+            const error = await response.json();
+            statusEl.textContent = `Error: ${error.detail || "Failed to submit payment"}`;
+            statusEl.style.color = "var(--error)";
+          }
+        } catch (e) {
+          statusEl.textContent = "Connection error. Please try again.";
+          statusEl.style.color = "var(--error)";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Submit Payment";
+        }
+      }
+
+      function updateNetworkInfo() {
+        const network = document.getElementById("network")?.value || "ETH";
+        const info = {
+          ETH: "Mainnet gas + premium execution",
+          BASE: "Low-cost, fast L2 minting",
+          OP: "Optimism execution layer",
+          ARB: "Arbitrum high throughput",
+          POLY: "Polygon low-fee support",
+          BSC: "BNB Chain throughput",
+          AVAX: "Avalanche fast finality",
+          BERA: "Berachain high-performance chain",
+        };
+        const funcGroup = document.getElementById("mint-func-group");
+        if (funcGroup) {
+          funcGroup.setAttribute(
+            "data-network",
+            info[network] || "Network ready",
+          );
+        }
+      }
+
+      async function loadStats() {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+
+        try {
+          const [userRes, jobsRes] = await Promise.all([
+            fetch("/api/auth/me", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch("/api/jobs", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
+
+          if (userRes.ok) {
+            const user = await userRes.json();
+            const creditsEl = document.getElementById("credits");
+            if (creditsEl)
+              creditsEl.textContent = `$${Number(user.credits || 0).toFixed(2)}`;
+          }
+          }
+
+          if (jobsRes.ok) {
+            const jobs = await jobsRes.json();
+            const totalJobsEl = document.getElementById("total-jobs");
+            const successEl = document.getElementById("successful-mints");
+
+            if (totalJobsEl) totalJobsEl.textContent = String(jobs.length || 0);
+            if (successEl)
+              successEl.textContent = String(
+                jobs.reduce(
+                  (sum, job) => sum + (Number(job.successful_mints) || 0),
+                  0,
+                ),
+              );
+          }
+        } catch (e) {
+          console.error("Failed to load dashboard stats:", e);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        updateNetworkInfo();
+        loadStats();
+        loadTreasuryAddress();
+        setInterval(loadStats, 5000);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sweetsnipe - Enterprise NFT Minting</title>
+    <link rel="icon" href="/static/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="logo-wrap">
+          <div class="logo">SWEETSNIPE</div>
+        </div>
+        <div class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#" onclick="showAuth('login')">Login</a>
+          <a
+            href="#"
+            onclick="showAuth('register')"
+            class="btn btn-primary btn-sm"
+            >Get Started</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <main class="page-shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Hosted minting infrastructure</span>
+          <h1>Mint NFTs at the speed of <span>signal.</span></h1>
+          <p>
+            Enterprise-grade NFT minting with God Mode pre-signed transactions,
+            cold wallet automation, and secure execution that feels effortless
+            from your browser.
+          </p>
+
+          <div class="hero-actions">
+            <a href="#" onclick="showAuth('register')" class="btn btn-primary"
+              >Launch Minting</a
+            >
+            <a href="#features" class="btn btn-secondary">Explore Features</a>
+          </div>
+
+          <div class="trust-row">
+            <span class="mini-pill">4.9/5 reliability</span>
+            <span class="mini-pill">24/7 uptime</span>
+            <span class="mini-pill">Multi-chain ready</span>
+          </div>
+        </div>
+
+        <div class="hero-panel glass-panel" aria-label="Platform overview">
+          <div class="panel-topline">
+            <span class="status-dot"></span>
+            <span>Live orchestration</span>
+          </div>
+
+          <div class="glow-ring"></div>
+
+          <div class="panel-metric">
+            <div>
+              <p class="metric-label">Wallets active</p>
+              <h3>2,840</h3>
+            </div>
+            <span class="metric-tag success">+18.4%</span>
+          </div>
+
+          <div class="panel-stack">
+            <div class="stack-row">
+              <span>Mint queue</span>
+              <strong>92%</strong>
+            </div>
+            <div class="progress"><span style="width: 92%"></span></div>
+
+            <div class="stack-row muted-row">
+              <span>Avg. execution</span>
+              <strong>0.8s</strong>
+            </div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-stat">
+              <small>Workers</small>
+              <strong>126</strong>
+            </div>
+            <div class="mini-stat">
+              <small>Success</small>
+              <strong>99.2%</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <div class="section-head">
+          <span class="eyebrow alt">Powerful system</span>
+          <h2>Built to mint harder, safer, faster.</h2>
+        </div>
+
+        <div class="card-grid">
+          <article class="card glass-hover feature-card">
+            <div class="feature-icon accent-one">⚡</div>
+            <h3>God Mode Pre-Signed TX</h3>
+            <p>
+              Transactions are signed milliseconds before minting opens, giving
+              you zero-latency execution when demand spikes.
+            </p>
+          </article>
+
+          <article class="card glass-hover feature-card">
+            <div class="feature-icon accent-two">🛡️</div>
+            <h3>Encrypted Vault Storage</h3>
+            <p>
+              Private keys stay encrypted at rest and are only exposed in memory
+              for the exact execution window.
+            </p>
+          </article>
+
+          <article class="card glass-hover feature-card">
+            <div class="feature-icon accent-three">💸</div>
+            <h3>Auto-Funding & Sweeping</h3>
+            <p>
+              Fund worker wallets automatically, then sweep residual ETH or
+              funds back into your cold wallet cleanly.
+            </p>
+          </article>
+
+          <article class="card glass-hover feature-card">
+            <div class="feature-icon accent-four">🎯</div>
+            <h3>Time Sniper Logic</h3>
+            <p>
+              Precision engine detects the mint trigger and wakes your mint
+              stack milliseconds before the launch moment.
+            </p>
+          </article>
+
+          <article class="card glass-hover feature-card">
+            <div class="feature-icon accent-five">📊</div>
+            <h3>Real-Time Analytics</h3>
+            <p>
+              Track every wallet, every status, and each transaction in a
+              premium live dashboard built for operators.
+            </p>
+          </article>
+
+          <article class="card glass-hover feature-card">
+            <div class="feature-icon accent-six">🌐</div>
+            <h3>Multi-Chain Support</h3>
+            <p>
+              Ethereum, Base, Optimism, Arbitrum, Polygon, BNB Chain, Avalanche,
+              and more are ready for launch.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="pricing" class="section">
+        <div class="section-head">
+          <span class="eyebrow alt">Simple pricing</span>
+          <h2>One wallet. One mint. One clean rate.</h2>
+        </div>
+
+        <div class="payment-card glass-panel">
+          <div class="per-wallet">PER WALLET / PER MINT</div>
+          <div class="price-tag">$1.00</div>
+          <p>Transparent pricing, no recurring fees, no hidden overhead.</p>
+          <div class="feature-list">
+            <span>Unlimited drops</span>
+            <span>God Mode included</span>
+            <span>Cold wallet transfer</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div
+      id="auth-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 12, 22, 0.72);
+        backdrop-filter: blur(14px);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div class="glass glass-panel auth-panel">
+        <div class="auth-header">
+          <h2 id="auth-title">Welcome Back</h2>
+          <p id="auth-subtitle">Sign in to your account</p>
+        </div>
+
+        <form id="auth-form" onsubmit="handleAuth(event)">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input
+              type="email"
+              class="form-input"
+              id="auth-email"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              class="form-input"
+              id="auth-password"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="width: 100%; justify-content: center"
+            id="auth-btn"
+          >
+            Sign In
+          </button>
+        </form>
+
+        <div class="auth-switch">
+          <span id="auth-switch-text">Don't have an account?</span>
+          <a href="#" onclick="toggleAuthMode()" id="auth-switch-link"
+            >Sign up</a
+          >
+        </div>
+
+        <button
+          onclick="hideAuth()"
+          class="close-modal"
+          aria-label="Close auth modal"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let authMode = "login";
+
+      function showAuth(mode) {
+        authMode = mode;
+        const modal = document.getElementById("auth-modal");
+        const title = document.getElementById("auth-title");
+        const subtitle = document.getElementById("auth-subtitle");
+        const btn = document.getElementById("auth-btn");
+        const switchText = document.getElementById("auth-switch-text");
+        const switchLink = document.getElementById("auth-switch-link");
+
+        modal.style.display = "flex";
+
+        if (mode === "login") {
+          title.textContent = "Welcome Back";
+          subtitle.textContent = "Sign in to your account";
+          btn.textContent = "Sign In";
+          switchText.textContent = "Don't have an account?";
+          switchLink.textContent = "Sign up";
+        } else {
+          title.textContent = "Create Account";
+          subtitle.textContent = "Build your minting workspace";
+          btn.textContent = "Create Account";
+          switchText.textContent = "Already have an account?";
+          switchLink.textContent = "Sign in";
+        }
+      }
+
+      function hideAuth() {
+        document.getElementById("auth-modal").style.display = "none";
+      }
+
+      function toggleAuthMode() {
+        showAuth(authMode === "login" ? "register" : "login");
+      }
+
+      async function handleAuth(e) {
+        e.preventDefault();
+        const email = document.getElementById("auth-email").value;
+        const password = document.getElementById("auth-password").value;
+        const btn = document.getElementById("auth-btn");
+
+        btn.disabled = true;
+        btn.textContent = "Please wait...";
+
+        try {
+          const endpoint =
+            authMode === "login" ? "/api/auth/token" : "/api/auth/register";
+          const body =
+            authMode === "login"
+              ? new URLSearchParams({ username: email, password: password })
+              : JSON.stringify({ email, password });
+
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                authMode === "login"
+                  ? "application/x-www-form-urlencoded"
+                  : "application/json",
+            },
+            body: body,
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem("access_token", data.access_token);
+            window.location.href = "/dashboard";
+          } else {
+            const error = await response.json();
+            alert(error.detail || "Authentication failed");
+          }
+        } catch (error) {
+          alert("Connection error. Please try again.");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = authMode === "login" ? "Sign In" : "Create Account";
+        }
+      }
+
+      async function checkAuth() {
+        const token = localStorage.getItem("access_token");
+        if (token) {
+          try {
+            const response = await fetch("/api/auth/me", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) {
+              window.location.href = "/dashboard";
+            } else {
+              localStorage.removeItem("access_token");
+            }
+          } catch (e) {
+            localStorage.removeItem("access_token");
+          }
+        }
+      }
+
+      checkAuth();
+    </script>
+  </body>
+</html>

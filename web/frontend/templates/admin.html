@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Sweetsnipe</title>
+    <link rel="icon" href="/static/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <style>
+      .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .metric-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+      }
+      .metric-card:hover {
+        border-color: var(--text-primary);
+        transform: translateY(-2px);
+      }
+      .metric-label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+      }
+      .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+      }
+      .metric-change {
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .metric-change.positive { color: var(--success); }
+      .metric-change.negative { color: var(--error); }
+      .metric-change.neutral { color: var(--text-muted); }
+      .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .admin-table th {
+        background: var(--bg-input);
+        color: var(--text-muted);
+        text-align: left;
+        padding: 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .admin-table td {
+        padding: 1rem;
+        border-top: 1px solid var(--border);
+        color: var(--text-secondary);
+      }
+      .admin-table tr:hover td {
+        background: var(--bg-input);
+      }
+      .admin-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .admin-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .admin-section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+      }
+      .chart-container {
+        height: 300px;
+        position: relative;
+        margin-top: 1rem;
+      }
+      .activity-log {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .activity-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .activity-item:last-child {
+        border-bottom: none;
+      }
+      .activity-timestamp {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        white-space: nowrap;
+        margin-left: 1rem;
+      }
+      .status-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+      }
+      .status-online { background: var(--success); }
+      .status-warning { background: var(--warning); }
+      .status-offline { background: var(--error); }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="logo-wrap">
+          <div class="logo">SWEETSNIPE ADMIN</div>
+        </div>
+        <div class="nav-links">
+          <a href="#" onclick="showSection('overview')">Overview</a>
+          <a href="#" onclick="showSection('users')">Users</a>
+          <a href="#" onclick="showSection('jobs')">Jobs</a>
+          <a href="#" onclick="showSection('payments')">Payments</a>
+          <a href="#" onclick="showSection('system')">System</a>
+          <a href="/dashboard">User View</a>
+          <a href="#" onclick="logout()">Logout</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="dashboard-shell">
+      <header class="dashboard-header glass-panel">
+        <div class="page-intro">
+          <h1>Admin Control Center</h1>
+          <p style="color: var(--text-muted); margin-top: 0.5rem;">
+            Real-time monitoring and management
+          </p>
+        </div>
+        <div class="header-actions">
+          <button onclick="recheckPayments()" class="btn btn-secondary">
+            🔄 Recheck Payments
+          </button>
+          <button onclick="refreshStats()" class="btn btn-primary">
+            📊 Refresh Data
+          </button>
+        </div>
+      </header>
+
+      <!-- OVERVIEW SECTION -->
+      <section id="section-overview" class="dashboard-section">
+        <div class="admin-grid">
+          <div class="metric-card">
+            <div class="metric-label">Total Users</div>
+            <div class="metric-value" id="total-users">0</div>
+            <div class="metric-change neutral">
+              <span id="users-change">—</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Total Jobs</div>
+            <div class="metric-value" id="total-jobs">0</div>
+            <div class="metric-change neutral">
+              <span id="jobs-change">—</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Revenue (USD)</div>
+            <div class="metric-value" id="total-revenue">$0.00</div>
+            <div class="metric-change positive">
+              <span id="revenue-change">—</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Active Jobs</div>
+            <div class="metric-value" id="active-jobs">0</div>
+            <div class="metric-change neutral">
+              <span>Currently running</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Success Rate</div>
+            <div class="metric-value" id="success-rate">0%</div>
+            <div class="metric-change neutral">
+              <span id="success-change">—</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Pending Payments</div>
+            <div class="metric-value" id="pending-payments">0</div>
+            <div class="metric-change warning">
+              <span>Awaiting verification</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-section">
+          <div class="admin-section-title">Recent Activity</div>
+          <div class="activity-log" id="activity-log">
+            <div class="activity-item">
+              <div style="color: var(--text-muted);">Loading activity...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-section">
+          <div class="admin-section-title">System Health</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="padding: 1rem; background: var(--bg-input); border-radius: 8px;">
+              <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                <span class="status-indicator status-online"></span>
+                <span style="font-weight: 600;">API Server</span>
+              </div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Operational</div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-input); border-radius: 8px;">
+              <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                <span class="status-indicator" id="db-status"></span>
+                <span style="font-weight: 600;">Database</span>
+              </div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;" id="db-status-text">Checking...</div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-input); border-radius: 8px;">
+              <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                <span class="status-indicator status-online"></span>
+                <span style="font-weight: 600;">Job Queue</span>
+              </div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Active</div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-input); border-radius: 8px;">
+              <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                <span class="status-indicator status-online"></span>
+                <span style="font-weight: 600;">Payment Verifier</span>
+              </div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Monitoring</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- USERS SECTION -->
+      <section id="section-users" class="dashboard-section" style="display: none;">
+        <div class="admin-section">
+          <div class="admin-section-title">User Management</div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Credits</th>
+                <th>Jobs</th>
+                <th>Status</th>
+                <th>Registered</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr><td colspan="6" style="text-align: center;">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- JOBS SECTION -->
+      <section id="section-jobs" class="dashboard-section" style="display: none;">
+        <div class="admin-section">
+          <div class="admin-section-title">All Jobs</div>
+          <div style="margin-bottom: 1rem;">
+            <select class="form-input compact" id="admin-job-filter" onchange="loadAdminJobs()">
+              <option value="">All Status</option>
+              <option value="queued">Queued</option>
+              <option value="running">Running</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Contract</th>
+                <th>Network</th>
+                <th>Wallets</th>
+                <th>Status</th>
+                <th>Success</th>
+                <th>Cost</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="jobs-table-body">
+              <tr><td colspan="9" style="text-align: center;">Loading jobs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PAYMENTS SECTION -->
+      <section id="section-payments" class="dashboard-section" style="display: none;">
+        <div class="admin-section">
+          <div class="admin-section-title">Payment Transactions</div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>TX Hash</th>
+                <th>User</th>
+                <th>Amount</th>
+                <th>Currency</th>
+                <th>Network</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="payments-table-body">
+              <tr><td colspan="8" style="text-align: center;">Loading payments...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SYSTEM SECTION -->
+      <section id="section-system" class="dashboard-section" style="display: none;">
+        <div class="admin-section">
+          <div class="admin-section-title">System Configuration</div>
+          <div style="display: grid; gap: 1rem;">
+            <div style="padding: 1rem; background: var(--bg-input); border-radius: 8px;">
+              <div style="font-weight: 600; margin-bottom: 0.5rem;">Environment</div>
+              <div style="color: var(--text-muted);" id="sys-env">Loading...</div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-input); border-radius: 8px;">
+              <div style="font-weight: 600; margin-bottom: 0.5rem;">Treasury Address</div>
+              <div style="color: var(--text-muted); font-family: monospace; font-size: 0.85rem;" id="sys-treasury">Loading...</div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-input); border-radius: 8px;">
+              <div style="font-weight: 600; margin-bottom: 0.5rem;">Price Per Wallet</div>
+              <div style="color: var(--text-muted);" id="sys-price">Loading...</div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-input); border-radius: 8px;">
+              <div style="font-weight: 600; margin-bottom: 0.5rem;">Database</div>
+              <div style="color: var(--text-muted);" id="sys-db">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-section">
+          <div class="admin-section-title">Audit Logs</div>
+          <div style="max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.85rem; color: var(--text-muted);">
+            <pre id="audit-logs">Loading logs...</pre>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      let currentSection = 'overview';
+
+      function showSection(section) {
+        document.querySelectorAll('.dashboard-section').forEach(s => s.style.display = 'none');
+        document.getElementById(`section-${section}`).style.display = 'block';
+        currentSection = section;
+
+        if (section === 'users') loadUsers();
+        if (section === 'jobs') loadAdminJobs();
+        if (section === 'payments') loadPayments();
+        if (section === 'system') loadSystemInfo();
+      }
+
+      async function loadStats() {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        try {
+          const [usersRes, jobsRes, paymentsRes] = await Promise.all([
+            fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('/api/admin/jobs', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('/api/admin/payments', { headers: { Authorization: `Bearer ${token}` } })
+          ]);
+
+          if (usersRes.ok) {
+            const users = await usersRes.json();
+            document.getElementById('total-users').textContent = users.length;
+          }
+
+          if (jobsRes.ok) {
+            const jobs = await jobsRes.json();
+            document.getElementById('total-jobs').textContent = jobs.length;
+            const activeJobs = jobs.filter(j => j.status === 'running').length;
+            document.getElementById('active-jobs').textContent = activeJobs;
+
+            const completed = jobs.filter(j => j.status === 'completed').length;
+            const successRate = jobs.length > 0 ? ((completed / jobs.length) * 100).toFixed(1) : 0;
+            document.getElementById('success-rate').textContent = `${successRate}%`;
+
+            const totalRevenue = jobs.reduce((sum, j) => sum + (j.cost || 0), 0);
+            document.getElementById('total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
+          }
+
+          if (paymentsRes.ok) {
+            const payments = await paymentsRes.json();
+            const pending = payments.filter(p => p.status === 'pending').length;
+            document.getElementById('pending-payments').textContent = pending;
+          }
+
+          // Update DB status
+          document.getElementById('db-status').className = 'status-indicator status-online';
+          document.getElementById('db-status-text').textContent = 'Connected';
+
+          loadActivityLog();
+        } catch (e) {
+          console.error('Failed to load stats:', e);
+          document.getElementById('db-status').className = 'status-indicator status-offline';
+          document.getElementById('db-status-text').textContent = 'Connection Error';
+        }
+      }
+
+      async function loadActivityLog() {
+        const token = localStorage.getItem('access_token');
+        try {
+          const response = await fetch('/api/admin/activity', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const activities = await response.json();
+            const container = document.getElementById('activity-log');
+            if (activities.length === 0) {
+              container.innerHTML = '<div class="activity-item"><div style="color: var(--text-muted);">No recent activity</div></div>';
+              return;
+            }
+            container.innerHTML = activities.slice(0, 10).map(a => `
+              <div class="activity-item">
+                <div>
+                  <div style="font-weight: 500;">${a.action}</div>
+                  <div style="color: var(--text-muted); font-size: 0.85rem;">${a.details}</div>
+                </div>
+                <div class="activity-timestamp">${new Date(a.timestamp).toLocaleString()}</div>
+              </div>
+            `).join('');
+          }
+        } catch (e) {
+          console.error('Failed to load activity:', e);
+        }
+      }
+
+      async function loadUsers() {
+        const token = localStorage.getItem('access_token');
+        try {
+          const response = await fetch('/api/admin/users', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const users = await response.json();
+            const tbody = document.getElementById('users-table-body');
+            if (users.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No users yet</td></tr>';
+              return;
+            }
+            tbody.innerHTML = users.map(u => `
+              <tr>
+                <td style="font-family: monospace;">${u.email}</td>
+                <td>$${Number(u.credits || 0).toFixed(2)}</td>
+                <td>${u.job_count || 0}</td>
+                <td><span class="badge ${u.is_active ? 'badge-success' : 'badge-failed'}">${u.is_active ? 'Active' : 'Inactive'}</span></td>
+                <td style="font-size: 0.85rem;">${new Date(u.created_at).toLocaleDateString()}</td>
+                <td>
+                  <div class="admin-actions">
+                    <button onclick="adjustCredits('${u.id}')" class="btn btn-secondary btn-sm">💳 Credits</button>
+                    <button onclick="toggleUserStatus('${u.id}', ${!u.is_active})" class="btn btn-secondary btn-sm">${u.is_active ? 'Deactivate' : 'Activate'}</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('');
+          }
+        } catch (e) {
+          console.error('Failed to load users:', e);
+        }
+      }
+
+      async function loadAdminJobs() {
+        const token = localStorage.getItem('access_token');
+        const filter = document.getElementById('admin-job-filter')?.value || '';
+        try {
+          let url = '/api/admin/jobs';
+          if (filter) url += `?status=${filter}`;
+          const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const jobs = await response.json();
+            const tbody = document.getElementById('jobs-table-body');
+            if (jobs.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No jobs found</td></tr>';
+              return;
+            }
+            tbody.innerHTML = jobs.map(j => `
+              <tr>
+                <td style="font-family: monospace; font-size: 0.75rem;">${j.id.slice(0, 8)}...</td>
+                <td style="font-size: 0.85rem;">${j.user_email || 'N/A'}</td>
+                <td style="font-family: monospace; font-size: 0.75rem;">${j.nft_contract.slice(0, 8)}...</td>
+                <td><span class="badge badge-pending">${j.network}</span></td>
+                <td>${j.total_wallets || 0}</td>
+                <td><span class="badge badge-${j.status === 'completed' ? 'success' : j.status === 'running' ? 'running' : j.status === 'failed' ? 'failed' : 'pending'}">${j.status}</span></td>
+                <td style="color: var(--success);">${j.successful_mints || 0}/${j.total_wallets || 0}</td>
+                <td>$${Number(j.cost || 0).toFixed(2)}</td>
+                <td style="font-size: 0.85rem;">${new Date(j.created_at).toLocaleString()}</td>
+              </tr>
+            `).join('');
+          }
+        } catch (e) {
+          console.error('Failed to load jobs:', e);
+        }
+      }
+
+      async function loadPayments() {
+        const token = localStorage.getItem('access_token');
+        try {
+          const response = await fetch('/api/admin/payments', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const payments = await response.json();
+            const tbody = document.getElementById('payments-table-body');
+            if (payments.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No payments yet</td></tr>';
+              return;
+            }
+            tbody.innerHTML = payments.map(p => `
+              <tr>
+                <td style="font-family: monospace; font-size: 0.75rem;">${p.tx_hash.slice(0, 12)}...</td>
+                <td style="font-size: 0.85rem;">${p.user_email || 'N/A'}</td>
+                <td>$${Number(p.amount || 0).toFixed(2)}</td>
+                <td>${p.currency}</td>
+                <td><span class="badge badge-pending">${p.network}</span></td>
+                <td><span class="badge badge-${p.status === 'verified' ? 'success' : p.status === 'failed' ? 'failed' : 'pending'}">${p.status}</span></td>
+                <td style="font-size: 0.85rem;">${new Date(p.created_at).toLocaleString()}</td>
+                <td>
+                  ${p.status === 'pending' ? `<button onclick="verifyPayment('${p.id}')" class="btn btn-secondary btn-sm">Verify</button>` : '—'}
+                </td>
+              </tr>
+            `).join('');
+          }
+        } catch (e) {
+          console.error('Failed to load payments:', e);
+        }
+      }
+
+      async function loadSystemInfo() {
+        const token = localStorage.getItem('access_token');
+        try {
+          const response = await fetch('/api/health');
+          if (response.ok) {
+            const health = await response.json();
+            document.getElementById('sys-env').textContent = health.environment || 'N/A';
+          }
+
+          // Load treasury info from template or API
+          document.getElementById('sys-treasury').textContent = '{{treasury_address}}' || 'Not configured';
+          document.getElementById('sys-price').textContent = '$1.00 USDT';
+          document.getElementById('sys-db').textContent = 'SQLite / PostgreSQL';
+
+          // Load audit logs (last 50 lines)
+          const logsRes = await fetch('/api/admin/logs', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (logsRes.ok) {
+            const logs = await logsRes.text();
+            document.getElementById('audit-logs').textContent = logs || 'No logs available';
+          }
+        } catch (e) {
+          console.error('Failed to load system info:', e);
+        }
+      }
+
+      async function adjustCredits(userId) {
+        const amount = prompt('Enter credit amount to add (can be negative):');
+        if (!amount) return;
+        const token = localStorage.getItem('access_token');
+        try {
+          const response = await fetch(`/api/admin/users/${userId}/credits`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ amount: parseFloat(amount) })
+          });
+          if (response.ok) {
+            alert('Credits adjusted successfully');
+            loadUsers();
+          } else {
+            alert('Failed to adjust credits');
+          }
+        } catch (e) {
+          alert('Connection error');
+        }
+      }
+
+      async function toggleUserStatus(userId, activate) {
+        if (!confirm(`Are you sure you want to ${activate ? 'activate' : 'deactivate'} this user?`)) return;
+        const token = localStorage.getItem('access_token');
+        try {
+          const response = await fetch(`/api/admin/users/${userId}/status`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ is_active: activate })
+          });
+          if (response.ok) {
+            alert('User status updated');
+            loadUsers();
+          } else {
+            alert('Failed to update user');
+          }
+        } catch (e) {
+          alert('Connection error');
+        }
+      }
+
+      async function verifyPayment(paymentId) {
+        const token = localStorage.getItem('access_token');
+        try {
+          const response = await fetch(`/api/admin/payments/${paymentId}/verify`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.ok) {
+            alert('Payment verification initiated');
+            loadPayments();
+          } else {
+            alert('Failed to verify payment');
+          }
+        } catch (e) {
+          alert('Connection error');
+        }
+      }
+
+      async function recheckPayments() {
+        const token = localStorage.getItem('access_token');
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = 'Checking...';
+        try {
+          const response = await fetch('/api/admin/recheck-payments', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.ok) {
+            alert('Payment recheck completed');
+            loadStats();
+            if (currentSection === 'payments') loadPayments();
+          } else {
+            alert('Failed to recheck payments');
+          }
+        } catch (e) {
+          alert('Connection error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '🔄 Recheck Payments';
+        }
+      }
+
+      function refreshStats() {
+        loadStats();
+        if (currentSection === 'users') loadUsers();
+        if (currentSection === 'jobs') loadAdminJobs();
+        if (currentSection === 'payments') loadPayments();
+        if (currentSection === 'system') loadSystemInfo();
+      }
+
+      function logout() {
+        localStorage.removeItem('access_token');
+        window.location.href = '/';
+      }
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          window.location.href = '/';
+          return;
+        }
+
+        // Verify user is admin by checking /api/auth/me
+        try {
+          const response = await fetch('/api/auth/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          if (!response.ok) {
+            // Token invalid or expired
+            localStorage.removeItem('access_token');
+            window.location.href = '/';
+            return;
+          }
+
+          const user = await response.json();
+          if (!user.is_admin) {
+            // User is not an admin - redirect to user dashboard
+            alert('Access denied: Admin privileges required');
+            window.location.href = '/dashboard';
+            return;
+          }
+
+          // User is verified admin - load the dashboard
+          loadStats();
+          setInterval(loadStats, 10000); // Refresh every 10 seconds
+        } catch (e) {
+          console.error('Auth check failed:', e);
+          window.location.href = '/';
+        }
+      });
+    </script>
+  </body>
+</html>

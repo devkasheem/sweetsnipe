@@ -1,0 +1,19 @@
+2026-08-17 22:56:50 | INFO | Development CORS origins: ['http://localhost:3000', 'http://localhost:8000']
+2026-08-17 22:57:54 | INFO | Development CORS origins: ['http://localhost:3000', 'http://localhost:8000']
+2026-08-17 23:04:08 | INFO | Development CORS origins: ['http://localhost:3000', 'http://localhost:8000']
+2026-08-17 23:04:08 | INFO | \U0001f680 Sweetsnipe server starting... (Environment: development)
+2026-08-17 23:04:08 | INFO | \u2705 Server startup complete
+2026-08-17 23:05:57 | INFO | Successful login for user: admin@sweetsnipe.local
+2026-08-17 23:11:52 | INFO | \U0001f6d1 Sweetsnipe server shutting down...
+2026-08-17 23:11:52 | INFO | \u2705 Server shutdown complete
+2026-08-17 23:11:56 | INFO | Development CORS origins: ['http://localhost:3000', 'http://localhost:8000']
+2026-08-17 23:11:56 | INFO | \U0001f680 Sweetsnipe server starting... (Environment: development)
+2026-08-17 23:11:56 | INFO | \u2705 Server startup complete
+2026-08-17 23:11:56 | INFO | \U0001f6d1 Sweetsnipe server shutting down...
+2026-08-17 23:11:56 | INFO | \u2705 Server shutdown complete
+2026-08-17 23:12:06 | INFO | Development CORS origins: ['http://localhost:3000', 'http://localhost:8000']
+2026-08-17 23:12:06 | INFO | \U0001f680 Sweetsnipe server starting... (Environment: development)
+2026-08-17 23:12:06 | INFO | \u2705 Server startup complete
+2026-08-17 23:14:34 | INFO | Successful login for user: admin@sweetsnipe.local
+2026-08-18 10:53:26 | INFO | \U0001f6d1 Sweetsnipe server shutting down...
+2026-08-18 10:53:26 | INFO | \u2705 Server shutdown complete

@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  sweetsnipe-web:
+    build: ./web/deployment
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - DATABASE_URL=sqlite:///./sweetsnipe.db
+      - TREASURY_ADDRESS=${TREASURY_ADDRESS}
+      - TREASURY_PRIVATE_KEY=${TREASURY_PRIVATE_KEY}
+      - PRICE_PER_WALLET_USDT=1.0
+    volumes:
+      - ./data:/app/data
+      - ./web/frontend:/app/web/frontend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
