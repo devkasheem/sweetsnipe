@@ -6,8 +6,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy both top-level and web-specific requirements so all runtime deps are installed
+COPY requirements.txt web/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt -r web/requirements.txt
 
 COPY . .
 # Install the repository so `src` is available in site-packages for all processes
