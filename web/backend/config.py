@@ -68,10 +68,11 @@ def validate_secrets():
         if not treasury_address or not treasury_address.startswith("0x") or len(treasury_address) != 42:
             errors.append("TREASURY_ADDRESS not configured for production")
 
-        treasury_private_key = settings.TREASURY_PRIVATE_KEY.strip()
-        normalized_key = treasury_private_key[2:] if treasury_private_key.startswith("0x") else treasury_private_key
-        if not treasury_private_key or len(normalized_key) != 64 or any(ch not in "0123456789abcdefABCDEF" for ch in normalized_key):
-            errors.append("TREASURY_PRIVATE_KEY not configured for production")
+        if settings.TREASURY_PRIVATE_KEY.strip():
+            treasury_private_key = settings.TREASURY_PRIVATE_KEY.strip()
+            normalized_key = treasury_private_key[2:] if treasury_private_key.startswith("0x") else treasury_private_key
+            if len(normalized_key) != 64 or any(ch not in "0123456789abcdefABCDEF" for ch in normalized_key):
+                errors.append("TREASURY_PRIVATE_KEY has invalid format (expected 0x followed by 64 hex chars)")
 
     if errors:
         error_msg = "CONFIGURATION ERROR - Server cannot start:\n" + "\n".join([f"  ❌ {e}" for e in errors])
