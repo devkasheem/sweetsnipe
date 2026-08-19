@@ -33,6 +33,34 @@ class Settings(BaseSettings):
             return v.strip().lower() in ("true", "1", "yes", "on", "debug")
         return bool(v)
 
+    @field_validator("TREASURY_ADDRESS", mode="before")
+    @classmethod
+    def normalize_treasury_address(cls, v):
+        if isinstance(v, str):
+            return v.strip().strip("'\"")
+        return v
+
+    @field_validator("TREASURY_PRIVATE_KEY", mode="before")
+    @classmethod
+    def normalize_treasury_private_key(cls, v):
+        if isinstance(v, str):
+            return v.strip().strip("'\"")
+        return v
+
+    @field_validator("SECRET_KEY", mode="before")
+    @classmethod
+    def normalize_secret_key(cls, v):
+        if isinstance(v, str):
+            return v.strip().strip("'\"")
+        return v
+
+    @field_validator("ENCRYPTION_KEY", mode="before")
+    @classmethod
+    def normalize_encryption_key(cls, v):
+        if isinstance(v, str):
+            return v.strip().strip("'\"")
+        return v
+
     @property
     def is_debug(self) -> bool:
         return self.DEBUG
