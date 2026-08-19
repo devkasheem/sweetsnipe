@@ -3,9 +3,6 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 from cryptography.fernet import Fernet
-import logging
-
-logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -87,18 +84,6 @@ settings = Settings()
 def validate_secrets():
     """Validate that all required secrets are properly configured."""
     errors = []
-
-    print("=" * 60)
-    print("CONFIG DEBUG - Raw os.environ relevant keys:")
-    for key in ["ENV", "SECRET_KEY", "ENCRYPTION_KEY", "TREASURY_ADDRESS", "TREASURY_PRIVATE_KEY", "DATABASE_URL", "ALLOWED_ORIGINS", "PORT"]:
-        val = os.environ.get(key, "(not set)")
-        if key in ["SECRET_KEY", "ENCRYPTION_KEY", "TREASURY_PRIVATE_KEY"] and val != "(not set)":
-            val = val[:10] + "..." if len(val) > 10 else val
-        print(f"  {key}: {val}")
-    print("=" * 60)
-    print(f"  settings.ENV: {settings.ENV}")
-    print(f"  settings.TREASURY_ADDRESS: '{settings.TREASURY_ADDRESS}'")
-    print("=" * 60)
 
     if not settings.SECRET_KEY or "change-me" in settings.SECRET_KEY.lower():
         errors.append("SECRET_KEY is not set or contains default value in .env")

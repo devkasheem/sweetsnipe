@@ -6,6 +6,11 @@ from datetime import datetime
 from typing import Dict, Set
 from fastapi import WebSocket
 from sqlalchemy.orm import Session
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+
 from backend.database import SessionLocal, Job, Worker
 from backend.config import decrypt_key, settings
 from src.config.settings import NETWORKS, ContractSpecs
