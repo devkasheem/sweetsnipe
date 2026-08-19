@@ -5,7 +5,7 @@ Applies schema updates and creates indexes for production optimization
 import sys
 import os
 
-# Add parent directory to path
+# Add parent directory to paths
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from web.backend.database import engine, Base, SessionLocal
