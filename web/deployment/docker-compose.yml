@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   sweetsnipe-web:
-    build: ./web/deployment
+    build:
+      context: .
+      dockerfile: web/deployment/Dockerfile
     ports:
       - "8000:8000"
     environment:
