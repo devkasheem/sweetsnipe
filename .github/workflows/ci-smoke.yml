@@ -1,0 +1,50 @@
+name: CI - smoke test
+
+on:
+  push:
+    branches:
+      - main
+      - 'ci/*'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build web Docker image (checks Dockerfile)
+        run: |
+          docker build -f web/deployment/Dockerfile -t sweetsnipe-ci:latest .
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-cache-dir -r requirements.txt -r web/requirements.txt
+
+      - name: Set minimal CI env
+        run: |
+          echo "SECRET_KEY=ci-secret" >> $GITHUB_ENV
+          python - <<'PY' > /tmp/ci_env.txt
+          from cryptography.fernet import Fernet
+          print(f'ENCRYPTION_KEY={Fernet.generate_key().decode()}')
+          PY
+          cat /tmp/ci_env.txt >> $GITHUB_ENV
+          echo "TREASURY_ADDRESS=0x0000000000000000000000000000000000000000" >> $GITHUB_ENV
+          echo "DATABASE_URL=sqlite:///./ci_test.db" >> $GITHUB_ENV
+
+      - name: Smoke import test (import backend app)
+        env:
+          PYTHONUNBUFFERED: 1
+        run: |
+          python -c "import backend.main; print('IMPORT_OK')"
