@@ -20,8 +20,9 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 import jwt
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".."))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
+sys.path.insert(0, os.path.join(BASE_DIR, ".."))
 
 from backend.database import SessionLocal, User, Job, Worker, Payment, SavedWallet, Base, engine
 from backend.auth import get_password_hash, verify_password, create_access_token, get_current_user, get_db
@@ -35,9 +36,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # File handler for audit logging
-os.makedirs("logs", exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
 file_handler = logging.handlers.RotatingFileHandler(
-    'logs/audit.log',
+    os.path.join(BASE_DIR, "logs", "audit.log"),
     maxBytes=10_000_000,  # 10MB
     backupCount=10
 )
@@ -89,8 +90,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 
-app.mount("/static", StaticFiles(directory="frontend/assets"), name="static")
-templates = Jinja2Templates(directory="frontend/templates")
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "frontend", "assets")), name="static")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "frontend", "templates"))
 
 job_queue = JobQueue()
 
@@ -467,7 +468,7 @@ async def force_verify_payment(
 async def get_audit_logs(admin: User = Depends(is_admin)):
     """Get recent audit logs."""
     import os
-    log_file = "logs/audit.log"
+    log_file = os.path.join(BASE_DIR, "logs", "audit.log")
 
     if not os.path.exists(log_file):
         return "No logs available"
