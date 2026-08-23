@@ -7286,3 +7286,4 @@ WHERE payments.status = ?]
 2026-08-17 22:59:08 | INFO | \u2705 Server shutdown complete
 2026-08-17 22:59:11 | INFO | Development CORS origins: ['http://localhost:3000', 'http://localhost:8000']
 2026-08-18 12:40:31 | INFO | Production CORS origins: ['http://localhost:3000', 'http://localhost:8000']
+2026-08-23 10:15:58 | INFO | Production CORS origins: ['http://localhost:3000', 'http://localhost:8000']

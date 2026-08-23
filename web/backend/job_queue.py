@@ -45,7 +45,8 @@ class JobQueue:
             "task": None,
             "started_at": None
         }
-        asyncio.create_task(self._process_queue())
+        # NOTE: the persistent loop started by start() picks up new jobs
+        # within 1s; spawning extra loops here risks double-processing.
 
     async def _process_queue(self):
         while self.running:
@@ -123,17 +124,19 @@ class JobQueue:
                         pk = decrypt_key(worker_data.encrypted_private_key)
                         unit = ExecutionUnit(pk, 0, config)
                         await unit.run_protocol()
-                        
+
                         worker_data.status = "success"
                         worker_data.balance = "0"
+                        job.successful_mints += 1
                         db.commit()
                         self._broadcast_job_update(job_id)
                     except Exception as e:
                         worker_data.status = "failed"
                         worker_data.error_message = str(e)[:200]
+                        job.failed_mints += 1
                         db.commit()
                         self._broadcast_job_update(job_id)
-            
+
             tasks = []
             for w in workers:
                 tasks.append(run_worker(w))
@@ -150,6 +153,8 @@ class JobQueue:
             self._broadcast_job_update(job_id)
             
         except Exception as e:
+            print(f"Job {job_id} execution error: {e}")
+            db.rollback()
             job = db.query(Job).filter(Job.id == job_id).first()
             if job:
                 job.status = "failed"
@@ -204,3 +209,5 @@ class JobQueue:
             db.close()
 
 job_queue = JobQueue()
+
+

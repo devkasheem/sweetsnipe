@@ -46,5 +46,6 @@ jobs:
       - name: Smoke import test (import backend app)
         env:
           PYTHONUNBUFFERED: 1
+          PYTHONPATH: web
         run: |
           python -c "import backend.main; print('IMPORT_OK')"

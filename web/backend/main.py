@@ -16,8 +16,10 @@ import os
 import sys
 import logging
 import logging.handlers
-from slowapi import Limiter
+from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 import jwt
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -49,6 +51,10 @@ app = FastAPI(title="Sweetsnipe Hosted", description="Enterprise NFT Minting Ser
 # ========== SECURITY: Rate Limiting ==========
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 app.state.limiter = limiter
+# Register the 429 exception handler and middleware so @limiter.limit
+# decorators return HTTP 429 instead of crashing with a 500.
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # ========== SECURITY: CORS Configuration ==========
 # SECURITY FIX: Environment-specific CORS origins
@@ -100,6 +106,23 @@ Base.metadata.create_all(bind=engine)
 @app.on_event("startup")
 async def startup_event():
     logger.info(f"🚀 Sweetsnipe server starting... (Environment: {settings.ENV})")
+    # Recover jobs left in running state by a previous crash/redeploy
+    db = SessionLocal()
+    try:
+        recovered = (
+            db.query(Job)
+            .filter(Job.status == "running")
+            .update({Job.status: "queued"}, synchronize_session=False)
+        )
+        db.commit()
+        if recovered:
+            logger.warning(f"Recovered {recovered} orphaned running job(s) back to queued")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Job recovery failed: {e}")
+    finally:
+        db.close()
+
     job_queue.start()
     asyncio.create_task(periodic_payment_check())
     logger.info("✅ Server startup complete")
