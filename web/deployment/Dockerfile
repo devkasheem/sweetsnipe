@@ -4,17 +4,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+# App root is /app/web so main.py's RELATIVE paths
+# ("frontend/assets", "frontend/templates") resolve correctly.
+WORKDIR /app/web
 
-COPY requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Build context is the REPO ROOT on Railway -> use web/ prefixes
+COPY web/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-COPY . .
-# Install the repository so `src` is available in site-packages for all processes
-RUN pip install --no-cache-dir -e .
+COPY web/backend ./backend
+COPY web/frontend ./frontend
 
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app/web
 EXPOSE 8000
 
 CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2"]
