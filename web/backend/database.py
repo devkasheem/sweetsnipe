@@ -7,7 +7,7 @@ import uuid
 import os
 
 # PRODUCTION FIX: Support both SQLite (dev) and PostgreSQL (production)
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sweetsnipe.db")
+DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip() or "sqlite:///./sweetsnipe.db"
 
 # Configure engine based on database type
 if DATABASE_URL.startswith("sqlite"):
@@ -119,3 +119,4 @@ class SavedWallet(Base):
 User.saved_wallets = relationship("SavedWallet", back_populates="user", cascade="all, delete-orphan")
 
 Base.metadata.create_all(bind=engine)
+
